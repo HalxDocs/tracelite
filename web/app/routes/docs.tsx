@@ -7,7 +7,10 @@ import {
   Layers, 
   Clock, 
   Lightbulb,
-  CheckCircle2
+  CheckCircle2,
+  Plug,
+  Server,
+  Zap
 } from "lucide-react";
 
 export default function Docs() {
@@ -21,7 +24,7 @@ export default function Docs() {
 
       <div className="relative max-w-4xl mx-auto p-8 md:p-16">
         
-        {/* Header Section */}
+        {/* Header */}
         <header className="mb-16">
           <Link
             to="/"
@@ -35,70 +38,143 @@ export default function Docs() {
             Trace<span className="text-indigo-500">Lite</span> Docs
           </h1>
           <p className="text-xl text-zinc-400 max-w-xl leading-relaxed">
-            The simple guide to seeing how your code breathes, moves, and occasionally takes a nap.
+            A simple guide to understanding, installing, and actually using TraceLite in a backend.
           </p>
         </header>
 
-        <div className="grid gap-12">
-          
-          {/* Main Content Cards */}
-          <DocSection 
-            title="What is TraceLite?" 
-            icon={<HelpCircle className="text-indigo-400" />}
-          >
-            <p>Imagine your backend is a busy kitchen. TraceLite is like having a <strong>magic camera</strong> that records every order from the moment it’s written down until the plate hits the table.</p>
-            <p className="mt-4 text-zinc-400 italic text-sm">No more guessing what happened to the soup.</p>
+        <div className="grid gap-14">
+
+          {/* WHAT IT IS */}
+          <DocSection title="What is TraceLite?" icon={<HelpCircle className="text-indigo-400" />}>
+            <p>
+              TraceLite is a <strong>backend tracing system</strong>.
+            </p>
+            <p className="mt-4">
+              It watches every request that hits your server and records:
+            </p>
+            <ul className="mt-3 list-disc list-inside text-zinc-400">
+              <li>when the request started</li>
+              <li>what code ran</li>
+              <li>how long each step took</li>
+              <li>what was slow</li>
+              <li>what crashed</li>
+            </ul>
+            <p className="mt-4">
+              Then it sends all of that information <strong>live</strong> to a dashboard using WebSockets.
+            </p>
           </DocSection>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <DocSection 
-              title="What is a Request?" 
-              icon={<MessageSquare className="text-emerald-400" />}
-            >
-              <p>A request is like a <strong>knock on the door</strong>. Someone says, "Hey! Can you show me my photos?" and your server starts working.</p>
-            </DocSection>
+          {/* HOW IT WORKS */}
+          <DocSection title="How TraceLite works (big picture)" icon={<Zap className="text-yellow-400" />}>
+            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
+              <li>A request enters your backend</li>
+              <li>TraceLite middleware creates a Trace</li>
+              <li>Your code creates Spans (steps)</li>
+              <li>The request finishes</li>
+              <li>The Trace is sent over WebSocket</li>
+              <li>The dashboard shows it instantly</li>
+            </ol>
+          </DocSection>
 
-            <DocSection 
-              title="What is a Trace?" 
-              icon={<Route className="text-blue-400" />}
-            >
-              <p>A trace is the <strong>full story</strong>. It’s the map of everywhere your server went to get that one job done.</p>
-            </DocSection>
-          </div>
+          {/* HOW TO USE IT */}
+          <DocSection title="How to use TraceLite in your backend" icon={<Server className="text-emerald-400" />}>
+            <p>
+              TraceLite is already running on your hosted backend.
+            </p>
+            <p className="mt-4">
+              You use it by doing <strong>two simple things</strong>:
+            </p>
 
-          <DocSection 
-            title="What is a Span?" 
-            icon={<Layers className="text-amber-400" />}
-          >
-            <p>A span is <strong>one tiny step</strong>. If "Making a Sandwich" is the Trace, then "Slicing the Bread" is a Span.</p>
-            
-            <div className="mt-6 bg-black/40 border border-zinc-800 rounded-2xl p-6 font-mono text-sm overflow-hidden relative">
-               <div className="absolute top-0 right-0 p-3 opacity-20"><Layers size={40} /></div>
-               <div className="text-indigo-400 font-bold mb-2">GET /sandwich</div>
-               <div className="flex items-center gap-2 text-zinc-500">
-                 <span className="ml-4 italic">└─</span> 
-                 <span className="text-zinc-300">slice.bread</span> 
-                 <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-500">12ms</span>
-               </div>
-               <div className="flex items-center gap-2 text-zinc-500">
-                 <span className="ml-4 italic">└─</span> 
-                 <span className="text-zinc-300">apply.mayo</span> 
-                 <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-500">450ms</span>
-                 <span className="text-[10px] text-amber-500 font-bold ml-2">SLOW!</span>
-               </div>
+            <div className="mt-6 space-y-6">
+              <div>
+                <h4 className="font-semibold text-white mb-2">1️⃣ Add the middleware</h4>
+                <p className="text-zinc-400">
+                  This wraps your entire HTTP server and automatically traces every request.
+                </p>
+
+                <pre className="mt-3 bg-black/40 p-4 rounded-xl text-sm overflow-x-auto">
+{`handler := tracer.Middleware(hub)(mux)
+http.ListenAndServe(":8080", handler)`}
+                </pre>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">2️⃣ Create spans inside handlers</h4>
+                <p className="text-zinc-400">
+                  Each span represents a step in your code.
+                </p>
+
+                <pre className="mt-3 bg-black/40 p-4 rounded-xl text-sm overflow-x-auto">
+{`func handler(w http.ResponseWriter, r *http.Request) {
+  ctx, span := tracer.Start(r.Context(), "handler.work")
+  defer tracer.End(span)
+
+  // do work here
+  time.Sleep(200 * time.Millisecond)
+
+  w.Write([]byte("ok"))
+}`}
+                </pre>
+              </div>
             </div>
           </DocSection>
 
-          <DocSection 
-            title="Why use this?" 
-            icon={<Lightbulb className="text-yellow-400" />}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          {/* HOSTED USAGE */}
+          <DocSection title="How to use it now that it’s hosted" icon={<Plug className="text-blue-400" />}>
+            <p>
+              Your backend is live at:
+            </p>
+
+            <pre className="mt-3 bg-black/40 p-3 rounded text-sm">
+https://tracelite-1.onrender.com
+            </pre>
+
+            <p className="mt-4">
+              Every time someone hits:
+            </p>
+
+            <pre className="mt-2 bg-black/40 p-3 rounded text-sm">
+/ping
+            </pre>
+
+            <p className="mt-4">
+              A trace is created automatically.
+            </p>
+
+            <p className="mt-4">
+              The trace is sent to:
+            </p>
+
+            <pre className="mt-2 bg-black/40 p-3 rounded text-sm">
+wss://tracelite-1.onrender.com/ws
+            </pre>
+
+            <p className="mt-4">
+              Your frontend dashboard listens to this WebSocket and renders everything live.
+            </p>
+          </DocSection>
+
+          {/* WHAT YOU SEE */}
+          <DocSection title="What you see in the dashboard" icon={<Layers className="text-amber-400" />}>
+            <ul className="space-y-3 text-zinc-400">
+              <li><strong>Timeline</strong> – each request</li>
+              <li><strong>Tree view</strong> – parent → child execution</li>
+              <li><strong>Flame graph</strong> – where time was spent</li>
+              <li><strong>Slow badges</strong> – performance problems</li>
+              <li><strong>Error markers</strong> – crashes</li>
+            </ul>
+          </DocSection>
+
+          {/* WHEN TO USE */}
+          <DocSection title="When should you use TraceLite?" icon={<Lightbulb className="text-yellow-400" />}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                "Find slow parts instantly",
-                "See errors as they happen",
-                "Understand complex code",
-                "Sleep better at night"
+                "API feels slow",
+                "You don’t know which function is slow",
+                "Logs are confusing",
+                "You want visual insight",
+                "Debugging production issues",
+                "Learning how your backend behaves"
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
                   <CheckCircle2 size={18} className="text-emerald-500" />
@@ -108,10 +184,10 @@ export default function Docs() {
             </div>
           </DocSection>
 
-          {/* Final Summary Quote */}
+          {/* FINAL SUMMARY */}
           <footer className="mt-12 py-10 border-t border-zinc-900 text-center">
             <blockquote className="text-2xl font-medium text-white italic tracking-tight">
-              "TraceLite turns the 'black box' of your backend into a <span className="text-indigo-400">transparent story</span>."
+              “TraceLite lets you <span className="text-indigo-400">see</span> your backend instead of guessing.”
             </blockquote>
           </footer>
 
@@ -121,7 +197,15 @@ export default function Docs() {
   );
 }
 
-function DocSection({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function DocSection({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="group relative">
       <div className="flex items-center gap-3 mb-4">
