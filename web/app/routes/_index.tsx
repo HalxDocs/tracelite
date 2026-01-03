@@ -30,26 +30,28 @@ export default function Index() {
           </div>
 
           {/* Navigation with horizontal scroll protection for mobile */}
-          <nav className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-2 md:pb-0">
-            {/* GitHub Star Link - Optimized for one line */}
-            <a
-              href="https://github.com/halxdocs/tracelite"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-400 hover:border-amber-500/30 transition-all whitespace-nowrap shrink-0"
-            >
-              <Star size={18} className="group-hover:fill-amber-400 transition-colors" />
-              <span className="text-sm font-medium">Star on GitHub</span>
-            </a>
+         <nav className="flex items-center gap-3 flex-nowrap overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+  {/* GitHub Star Link */}
+  <a
+    href="https://github.com/halxdocs/tracelite"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="group flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-400 hover:border-amber-500/30 transition-all whitespace-nowrap shrink-0"
+  >
+    <Star size={18} className="group-hover:fill-amber-400 transition-colors" />
+    <span className="text-sm font-medium">Star on GitHub</span>
+  </a>
 
-            <Link
-              to="/docs"
-              className="group flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all shadow-xl whitespace-nowrap shrink-0"
-            >
-              <BookOpen size={18} className="text-zinc-500 group-hover:text-indigo-400" />
-              <span className="text-sm font-medium">Documentation</span>
-            </Link>
-          </nav>
+  {/* Docs Link */}
+  <Link
+    to="/docs"
+    className="group flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all shadow-xl whitespace-nowrap shrink-0"
+  >
+    <BookOpen size={18} className="text-zinc-500 group-hover:text-indigo-400" />
+    <span className="text-sm font-medium">Docs</span>
+  </Link>
+</nav>
+
         </header>
 
         {/* Quick Stats Dashboard */}
