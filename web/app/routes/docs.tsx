@@ -122,7 +122,7 @@ http.ListenAndServe(":8080", handler)`}
           {/* HOSTED USAGE */}
           <DocSection title="How to use it now that it’s hosted" icon={<Plug className="text-blue-400" />}>
             <p>
-              Your backend is live at:
+              The backend is live at:
             </p>
 
             <pre className="mt-3 bg-black/40 p-3 rounded text-sm">
