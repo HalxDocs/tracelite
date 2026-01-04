@@ -74,8 +74,8 @@ export default function Index() {
       <footer className="relative py-8 border-t border-zinc-900 bg-black/20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center justify-center gap-2">
           <p className="text-sm text-zinc-500 flex items-center gap-2">
-            Built with <Heart size={14} className="text-red-500 fill-red-500" /> by 
-            <span className="text-zinc-300 font-bold">halxdocs</span>
+            Built  <Heart size={14} className="text-red-500 fill-red-500" /> by 
+            <span className="text-zinc-300 font-bold">halxdocs</span> btw!
           </p>
           <a 
             href="https://halxdocs.com" 
