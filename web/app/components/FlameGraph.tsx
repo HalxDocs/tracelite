@@ -1,74 +1,137 @@
-import type { SpanNode } from "~/utils/spanTree";
+import type { SpanNode } from "~/utils/spanTree"
+import type { SpanDiff } from "~/types/diff"
 
+type FlameNode = SpanNode | SpanDiff
 
-function ms(n: string | number) {
-  return Number(n) / 1_000_000;
+type Props = {
+  node: FlameNode
+  rootDuration: number
+  depth?: number
+  mode?: "normal" | "diff"
 }
 
 export function FlameGraph({
   node,
   rootDuration,
-  level = 0,
-}: {
-  node: SpanNode;
-  rootDuration: number;
-  level?: number;
-}) {
-  const duration = ms(node.duration);
-  // Calculate width, ensuring very small spans are still visible (min 0.5%)
-  const width = Math.max((duration / rootDuration) * 100, 0.5);
+  depth = 0,
+  mode = "normal",
+}: Props) {
+  const duration = getDuration(node, mode)
+
+  const width =
+    rootDuration > 0
+      ? Math.max((duration / rootDuration) * 100, 2)
+      : 2
 
   return (
-    <div className="w-full">
-      <div className="relative group mb-[2px]">
-        {/* Interactive Bar */}
+    <div className="mb-1 relative group">
+      <div
+        className="flex items-center"
+        style={{ marginLeft: depth * 12 }}
+      >
+        {/* Flame Bar */}
         <div
-          className={`h-7 rounded-sm flex items-center transition-all duration-200 cursor-help relative overflow-hidden
-            ${node.error 
-              ? "bg-gradient-to-r from-red-600 to-red-500 shadow-[inset_0_0_10px_rgba(0,0,0,0.3)]" 
-              : node.slow 
-                ? "bg-gradient-to-r from-orange-600 to-orange-400" 
-                : "bg-gradient-to-r from-indigo-600 to-indigo-500 opacity-80 group-hover:opacity-100"
-            }`}
-          style={{ 
-            width: `${width}%`,
-            // level * 4 creates a subtle "staircase" effect for hierarchy
-            filter: `brightness(${100 - (level * 5)}%)` 
-          }}
+          className={`h-6 rounded px-2 text-xs flex items-center truncate font-medium cursor-default
+            ${getColor(node, mode)}`}
+          style={{ width: `${width}%` }}
         >
-          {/* Label Layer */}
-          <div className="sticky left-0 flex items-center px-2 w-full min-w-max">
-            <span className={`text-[10px] font-bold tracking-tight truncate ${node.error ? 'text-white' : 'text-zinc-100'}`}>
-              {node.name}
-            </span>
-            <span className="ml-2 text-[9px] font-mono opacity-80 text-black/70">
-              {duration.toFixed(2)}ms
-            </span>
-          </div>
+          <span className="truncate">{node.name}</span>
 
-          {/* Glossy Overlay effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-        </div>
+          <span className="ml-2 opacity-70">
+            {ms(duration)}
+          </span>
 
-        {/* Floating Tooltip Mockup (Title attribute for simplicity) */}
-        <div className="hidden group-hover:block absolute z-20 top-full left-0 mt-1 p-2 bg-zinc-900 border border-zinc-700 rounded shadow-xl text-[11px] whitespace-nowrap pointer-events-none">
-          <p className="font-bold text-white">{node.name}</p>
-          <p className="text-zinc-400">Duration: {duration.toFixed(3)}ms</p>
-          <p className="text-zinc-400 text-[10px]">Weight: {((duration/rootDuration)*100).toFixed(1)}% of total</p>
+          {/* % Regression Label */}
+          {mode === "diff" &&
+            isSpanDiff(node) &&
+            node.baseDuration &&
+            node.newDuration && (
+              <span className="ml-2 text-[10px] font-bold opacity-80">
+                {percent(node.baseDuration, node.newDuration)}
+              </span>
+            )}
         </div>
       </div>
 
-      {/* Children Container - No more margins here, they stack under the bar */}
-      <div className="w-full">
-        {node.children.map((child) => (
-          <FlameGraph
-            key={child.id}
-            node={child}
-            rootDuration={rootDuration}
-            level={level + 1}
-          />
-        ))}
+      {/* Tooltip */}
+      <div className="absolute z-50 hidden group-hover:block top-full left-0 mt-1 w-max max-w-xs rounded-lg bg-black border border-zinc-800 px-3 py-2 text-[11px] text-zinc-300 shadow-xl">
+        <div className="font-bold text-white mb-1">
+          {node.name}
+        </div>
+
+        {mode === "diff" && isSpanDiff(node) ? (
+          <>
+            <div>Base: {ms(node.baseDuration ?? 0)}</div>
+            <div>Current: {ms(node.newDuration ?? 0)}</div>
+            <div className="font-bold mt-1">
+              Δ {ms(node.delta ?? 0)}
+            </div>
+          </>
+        ) : (
+          <div>Duration: {ms(Number((node as SpanNode).duration))}</div>
+        )}
       </div>
+
+      {/* Children */}
+      {getChildren(node).map((child) => (
+        <FlameGraph
+          key={child.id}
+          node={child}
+          rootDuration={rootDuration}
+          depth={depth + 1}
+          mode={mode}
+        />
+      ))}
     </div>
-  );
+  )
+}
+
+/* ---------------- helpers ---------------- */
+
+function isSpanDiff(node: FlameNode): node is SpanDiff {
+  return "status" in node
+}
+
+function getDuration(node: FlameNode, mode: Props["mode"]) {
+  if (mode === "diff" && isSpanDiff(node)) {
+    return node.newDuration ?? node.baseDuration ?? 0
+  }
+
+  return Number((node as SpanNode).duration)
+}
+
+function getChildren(node: FlameNode): FlameNode[] {
+  if ("children" in node && node.children) {
+    return node.children as FlameNode[]
+  }
+  return []
+}
+
+function ms(v: number) {
+  return `${(v / 1_000_000).toFixed(1)}ms`
+}
+
+function percent(base: number, next: number) {
+  const value = ((next - base) / base) * 100
+  const sign = value > 0 ? "+" : ""
+  return `${sign}${value.toFixed(1)}%`
+}
+
+function getColor(node: FlameNode, mode: Props["mode"]) {
+  if (mode !== "diff" || !isSpanDiff(node)) {
+    return "bg-orange-500 text-black"
+  }
+
+  switch (node.status) {
+    case "slower":
+      return "bg-red-500/80 text-black"
+    case "faster":
+      return "bg-emerald-500/80 text-black"
+    case "added":
+      return "bg-blue-500/80 text-black"
+    case "removed":
+      return "bg-zinc-700 text-zinc-300"
+    default:
+      return "bg-zinc-500/40 text-zinc-200"
+  }
 }
