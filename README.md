@@ -165,13 +165,13 @@ You want visual debugging instead of guessing
 
 Backend: Go, net/http, WebSockets
 
-Frontend: React, React Router / Remix, Tailwind
+Frontend:  Remix, Tailwind, Typescript.
 
 Transport: WebSocket (real-time streaming)
 
 🚧 Status
 
-This is v0.1.
+This is v0.2.
 
 TraceLite is:
 
@@ -197,4 +197,5 @@ plugins
 
 TraceLite turns backend execution into a live, visual story so you can instantly see what’s slow and why.
 
-DO NOT FORGET TO STAR - THANKS
+DO NOT FORGET TO STAR THIS REPO - THANKS
+
